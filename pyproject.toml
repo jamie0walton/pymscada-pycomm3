@@ -1,0 +1,31 @@
+[project]
+name = "pymscada-pycomm3"
+version = "0.0.1"
+description = "pycomm3 connector for pymscada"
+authors = [
+    {name = "Jamie Walton", email = "jamie@walton.net.nz"},
+]
+dependencies = [
+    "pymscada>=0.0.11",
+    "pycomm3>=1.2.14",
+]
+requires-python = ">=3.9"
+readme = "README.md"
+license = {text = "GPL-3.0-or-later"}
+
+[build-system]
+requires = ["pdm-backend"]
+build-backend = "pdm.backend"
+
+
+[tool.pdm]
+package-type = "library"
+
+[tool.pdm.dev-dependencies]
+test = [
+    "pytest>=7.4.3",
+    "pytest-asyncio>=0.23.2",
+    "pytest-cov>=4.1.0",
+    "flake8>=6.1.0",
+    "flake8-docstrings>=1.7.0",
+]

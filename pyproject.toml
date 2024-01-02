@@ -1,6 +1,6 @@
 [project]
 name = "pymscada-pycomm3"
-version = "0.0.2"
+version = "0.0.3"
 description = "pycomm3 connector for pymscada"
 authors = [
     {name = "Jamie Walton", email = "jamie@walton.net.nz"},

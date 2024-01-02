@@ -26,7 +26,7 @@ class LogixClientConnector:
         self.periodic = Periodic(self.poll, rate)
         self.plc = LogixDriver(ip)
 
-    def write_tag_update(self, addr: str, value: int|float):
+    def write_tag_update(self, addr: str, value):  # : int|float
         """Write out any tag updates."""
         if not self.plc.connected and not self.plc.open():
             logging.warning(f'write failed {self.plc_name} {addr} to {value}')

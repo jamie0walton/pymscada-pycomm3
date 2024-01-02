@@ -5,24 +5,21 @@ rtus:
   ip: 172.26.7.196
   rate: 0.2
   read:
-  - {addr: Fout, start: 0, end: 99}
-  - {addr: Iout, start: 0, end: 99}
+  - {addr: Fout, type: 'REAL[]', start: 0, end: 99}
+  - {addr: Iout, type: 'DINT[]', start: 0, end: 99}
   writeok:
   - {addr: Fin, start: 0, end: 99}
   - {addr: Iin, start: 0, end: 99}
 tags:
-  Ani_Fout_0:
+  Ani_Fout_20:
     type: float32
-    addr: Ani:Fout:0
-  Ani_Fout_1:
+    addr: Ani:Fout:20
+  Ani_Iout_20:
+    type: int32
+    addr: Ani:Iout:20
+  Ani_Fin_20:
     type: float32
-    addr: Ani:Fout:1
-  Ani_Iout_0:
+    addr: Ani:Fin:20
+  Ani_Iin_20:
     type: int32
-    addr: Ani:Iout:0
-  Ani_Iout_1:
-    type: int32
-    addr: Ani:Iout:1
-  Ani_Bit_0:
-    type: bool
-    addr: Ani:Iout:2:0
+    addr: Ani:Iin:20

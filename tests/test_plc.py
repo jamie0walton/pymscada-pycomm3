@@ -12,24 +12,30 @@ CLIENT = {
         {
             'name': 'Ani',
             'ip': '172.26.7.196',
-            'rate': '0.1',
+            'rate': '0.2',
             'read': [
                 {'addr': 'Fout', 'type': 'REAL[]', 'start': 0, 'end': 99},
                 {'addr': 'Iout', 'type': 'DINT[]', 'start': 0, 'end': 99},
-                # {'addr': 'SomeVar', 'type': 'REAL'}
+                {'addr': 'OutVar', 'type': 'REAL'}
             ],
             'writeok': [
                 {'addr': 'Fin', 'type': 'REAL[]', 'start': 0, 'end': 99},
                 {'addr': 'Iin', 'type': 'DINT[]', 'start': 0, 'end': 99},
-                # {'addr': 'AnotherVar', 'type': 'REAL'}
+                {'addr': 'InVar', 'type': 'REAL'}
             ]
         }
     ],
     'tags': {
-        'Ani_Fin_20': {'type': 'float32', 'addr': 'Ani:Fin:20'},
-        'Ani_Fout_20': {'type': 'float32', 'addr': 'Ani:Fout:20'},
-        'Ani_Iin_20': {'type': 'int32', 'addr': 'Ani:Iin:20'},
-        'Ani_Iout_20': {'type': 'int32', 'addr': 'Ani:Iout:20'}
+        'Ani_Fin_20': {'type': 'float32', 'addr': 'Ani:Fin[20]'},
+        'Ani_Fout_20': {'type': 'float32', 'addr': 'Ani:Fout[20]'},
+        'Ani_Iin_20': {'type': 'int32', 'addr': 'Ani:Iin[20]'},
+        'Ani_Iout_20': {'type': 'int32', 'addr': 'Ani:Iout[20]'},
+        'InVar': {'type': 'float32', 'addr': 'Ani:InVar'},
+        'OutVar': {'type': 'float32', 'addr': 'Ani:OutVar'},
+        'Ani_Iin_21_0': {'type': 'bool', 'addr': 'Ani:Iin[21].0'},
+        'Ani_Iout_21_0': {'type': 'bool', 'addr': 'Ani:Iout[21].0'},
+        'Ani_Iin_21_1': {'type': 'bool', 'addr': 'Ani:Iin[21].1'},
+        'Ani_Iout_21_1': {'type': 'bool', 'addr': 'Ani:Iout[21].1'},
     }
 }
 queue = asyncio.Queue()
@@ -51,24 +57,56 @@ async def test_connect():
     """Test Logix."""
     global queue
     lc = LogixClient(**CLIENT)
-    # await lc.start()
-    s1 = Tag('Ani_Fin_20', float)
-    s2 = Tag('Ani_Iin_20', int)
-    g1 = Tag('Ani_Fout_20', float)
-    g2 = Tag('Ani_Iout_20', int)
-    g1.add_callback(tag_callback)
-    g2.add_callback(tag_callback)
+    # PLC code maps 'in' tags to 'out' tags to close the loop
+    # requires a real PLC with Controller scoped tags
+    intags: list[Tag] = [
+        Tag('Ani_Fin_20', float),
+        Tag('Ani_Iin_20', int),
+        Tag('InVar', float),
+        Tag('Ani_Iin_21_0', int),
+        Tag('Ani_Iin_21_1', int)
+    ]
+    outtags: list[Tag] = [
+        Tag('Ani_Fout_20', float),
+        Tag('Ani_Iout_20', int),
+        Tag('OutVar', float),
+        Tag('Ani_Iout_21_0', int),
+        Tag('Ani_Iout_21_1', int)
+    ]
     start = time()
+    for i in range(5):
+        outtags[i].add_callback(tag_callback)
+    intags[0].value = 1e20
+    intags[1].value = 1000000
+    intags[2].value = -1e10
+    intags[3].value = 0
+    intags[4].value = 1
     await lc._poll()
-    x1, x2 = await queue.get(), await queue.get()
-    assert x1.value is not None
-    assert x2.value is not None
-    for v in range(-50, 50):
-        if v == x1.value:
-            continue
-        s1.value = v
+    assert outtags[0].value == pytest.approx(1e20)
+    assert outtags[1].value == 1000000
+    assert outtags[2].value == pytest.approx(-1e10)
+    assert outtags[3].value == 0
+    assert outtags[4].value == 1
+    # second set
+    intags[0].value = -10.5
+    intags[1].value = 1
+    intags[2].value = 100.1
+    intags[3].value = 1
+    intags[4].value = 0
+    await lc._poll()
+    assert outtags[0].value == pytest.approx(-10.5)
+    assert outtags[1].value == 1
+    assert outtags[2].value == pytest.approx(100.1)
+    assert outtags[3].value == 1
+    assert outtags[4].value == 0
+    # do another fifty
+    for i in range(50):
+        for j in range(3):
+            intags[j].value += 1
         await lc._poll()
-        x1 = await queue.get()
-        assert x1.value == pytest.approx(v)
+    assert outtags[0].value == pytest.approx(39.5)
+    assert outtags[1].value == 51
+    assert outtags[2].value == pytest.approx(150.1)
+    assert queue.qsize() == 160
     duration = time() - start
     assert duration < 1

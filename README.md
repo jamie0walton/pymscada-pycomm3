@@ -1,6 +1,8 @@
 As of pymscada version 0.0.14 this is now part of the main package, so you do not need
 to install this package to talk with Logix PLCs.
 
+ARCHIVED.
+
 # pymscada-pycomm3
 Rockwell PLC driver for pymscada using pycomm3
 
